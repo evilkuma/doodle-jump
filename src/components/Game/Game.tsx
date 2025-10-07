@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
-import styled from 'styled-components';
-import { observer } from 'mobx-react-lite';
-import { gameStore } from '../../stores/gameStore';
-import Player from '../Player/Player';
-import Platforms from '../Platforms/Platforms';
-import Joystick from '../Joystick/Joystick';
+import React, { useEffect, useState } from "react";
+import { Canvas } from "@react-three/fiber";
+import { PerspectiveCamera } from "@react-three/drei";
+import styled from "styled-components";
+import { observer } from "mobx-react-lite";
+import { gameStore } from "../../stores/gameStore";
+import Player from "../Player/Player";
+import Platforms from "../Platforms/Platforms";
+import Joystick from "../Joystick/Joystick";
 
 const GameContainer = styled.div`
   width: 100%;
@@ -30,7 +30,7 @@ const ScoreContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   color: white;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
@@ -42,11 +42,11 @@ const Score = styled.div`
   font-size: 24px;
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  
+
   @media (max-width: 768px) {
     font-size: 20px;
   }
-  
+
   @media (max-width: 480px) {
     font-size: 18px;
   }
@@ -56,11 +56,11 @@ const Height = styled.div`
   font-size: 18px;
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  
+
   @media (max-width: 768px) {
     font-size: 16px;
   }
-  
+
   @media (max-width: 480px) {
     font-size: 14px;
   }
@@ -73,7 +73,7 @@ const ControlButtons = styled.div`
   display: flex;
   gap: 10px;
   pointer-events: auto;
-  
+
   @media (max-width: 768px) {
     top: 10px;
     right: 10px;
@@ -102,12 +102,12 @@ const Button = styled.button`
     background: rgba(255, 255, 255, 0.4);
     border-color: white;
   }
-  
+
   @media (max-width: 768px) {
     padding: 8px 12px;
     font-size: 12px;
   }
-  
+
   @media (max-width: 480px) {
     padding: 6px 10px;
     font-size: 11px;
@@ -134,7 +134,7 @@ const GameOverScreen = styled.div`
 
 const RestartButton = styled.button`
   padding: 15px 30px;
-  background: #4CAF50;
+  background: #4caf50;
   border: none;
   border-radius: 10px;
   color: white;
@@ -148,7 +148,7 @@ const RestartButton = styled.button`
     background: #45a049;
     transform: scale(1.05);
   }
-  
+
   @media (max-width: 768px) {
     padding: 12px 24px;
     font-size: 16px;
@@ -165,12 +165,12 @@ const GameTitle = styled.h1`
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   pointer-events: none;
-  
+
   @media (max-width: 768px) {
     font-size: 24px;
     top: 15px;
   }
-  
+
   @media (max-width: 480px) {
     font-size: 20px;
     top: 10px;
@@ -192,52 +192,62 @@ const SmoothCamera: React.FC = observer(() => {
 
 const Game: React.FC = observer(() => {
   const [isMobile, setIsMobile] = useState(false);
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isAndroid = /android/.test(userAgent);
 
   useEffect(() => {
     // Определяем мобильное устройство
     const checkMobile = () => {
-      return window.innerWidth <= 768 || 'ontouchstart' in window;
+      return window.innerWidth <= 768 || "ontouchstart" in window;
     };
-    
+
     setIsMobile(checkMobile());
-    
+
     const handleResize = () => {
       setIsMobile(checkMobile());
     };
-    
-    window.addEventListener('resize', handleResize);
+
+    window.addEventListener("resize", handleResize);
 
     // Поддержка акселерометра
     const handleDeviceMotion = (event: DeviceMotionEvent) => {
-      if (gameStore.controlType === 'accelerometer' && event.accelerationIncludingGravity) {
+      if (
+        gameStore.controlType === "accelerometer" &&
+        event.accelerationIncludingGravity
+      ) {
         const acceleration = event.accelerationIncludingGravity;
         if (acceleration.x) {
-          const tilt = Math.max(-1, Math.min(1, -acceleration.x / 5));
-          gameStore.setPlayerVelocity(tilt * gameStore.MOVE_SPEED, gameStore.playerVelocity.y);
+          const accel = isAndroid ? -acceleration.x : acceleration.x;
+          const tilt = Math.max(-1, Math.min(1, accel / 5));
+          gameStore.setPlayerVelocity(
+            tilt * gameStore.MOVE_SPEED,
+            gameStore.playerVelocity.y
+          );
         }
       }
     };
 
     // Запрос разрешения на использование акселерометра (для iOS)
-    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-      (DeviceMotionEvent as any).requestPermission()
+    if (typeof (DeviceMotionEvent as any).requestPermission === "function") {
+      (DeviceMotionEvent as any)
+        .requestPermission()
         .then((permissionState: string) => {
-          if (permissionState === 'granted') {
-            window.addEventListener('devicemotion', handleDeviceMotion);
+          if (permissionState === "granted") {
+            window.addEventListener("devicemotion", handleDeviceMotion);
           }
         })
         .catch(console.error);
     } else if (window.DeviceMotionEvent) {
-      window.addEventListener('devicemotion', handleDeviceMotion);
+      window.addEventListener("devicemotion", handleDeviceMotion);
     }
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('devicemotion', handleDeviceMotion);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("devicemotion", handleDeviceMotion);
     };
   }, [gameStore.controlType]);
 
-  const handleControlTypeChange = (type: 'joystick' | 'accelerometer') => {
+  const handleControlTypeChange = (type: "joystick" | "accelerometer") => {
     gameStore.setControlType(type);
   };
 
@@ -248,7 +258,7 @@ const Game: React.FC = observer(() => {
   return (
     <GameContainer>
       <Canvas>
-        <color attach="background" args={['#87CEEB']} />
+        <color attach="background" args={["#87CEEB"]} />
         <SmoothCamera />
         <ambientLight intensity={0.6} />
         <pointLight position={[10, 10, 10]} />
@@ -261,30 +271,34 @@ const Game: React.FC = observer(() => {
       <UIOverlay>
         <ScoreContainer>
           <Score>Счет: {gameStore.score}</Score>
-          <Height>Высота: {Math.max(0, Math.floor(gameStore.playerPosition.y))}м</Height>
+          <Height>
+            Высота: {Math.max(0, Math.floor(gameStore.playerPosition.y))}м
+          </Height>
         </ScoreContainer>
-        
+
         <ControlButtons>
           <Button
-            className={gameStore.controlType === 'joystick' ? 'active' : ''}
-            onClick={() => handleControlTypeChange('joystick')}
+            className={gameStore.controlType === "joystick" ? "active" : ""}
+            onClick={() => handleControlTypeChange("joystick")}
           >
-            {isMobile ? '🕹️' : '🕹️ Джойстик'}
+            {isMobile ? "🕹️" : "🕹️ Джойстик"}
           </Button>
           <Button
-            className={gameStore.controlType === 'accelerometer' ? 'active' : ''}
-            onClick={() => handleControlTypeChange('accelerometer')}
+            className={
+              gameStore.controlType === "accelerometer" ? "active" : ""
+            }
+            onClick={() => handleControlTypeChange("accelerometer")}
           >
-            {isMobile ? '📱' : '📱 Наклон'}
+            {isMobile ? "📱" : "📱 Наклон"}
           </Button>
         </ControlButtons>
       </UIOverlay>
 
-      {gameStore.controlType === 'joystick' && (
+      {gameStore.controlType === "joystick" && (
         <div className="controls-overlay">
           <Joystick />
           {/* Пустой div для балансировки (можно добавить другие элементы управления справа) */}
-          <div style={{ width: '120px', height: '120px' }} />
+          <div style={{ width: "120px", height: "120px" }} />
         </div>
       )}
 
@@ -292,10 +306,11 @@ const Game: React.FC = observer(() => {
         <GameOverScreen>
           <h1>Игра окончена!</h1>
           <p>Ваш счет: {gameStore.score}</p>
-          <p>Максимальная высота: {Math.max(0, Math.floor(gameStore.playerPosition.y))}м</p>
-          <RestartButton onClick={handleRestart}>
-            🎮 Играть снова
-          </RestartButton>
+          <p>
+            Максимальная высота:{" "}
+            {Math.max(0, Math.floor(gameStore.playerPosition.y))}м
+          </p>
+          <RestartButton onClick={handleRestart}>🎮 Играть снова</RestartButton>
         </GameOverScreen>
       )}
     </GameContainer>
